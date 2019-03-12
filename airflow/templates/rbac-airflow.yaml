@@ -5,8 +5,8 @@ kind: ServiceAccount
 metadata:
   name: {{ .Values.airflowCfg.kubernetes.workerServiceAccountName }}
   annotations:
-    "helm.sh/hook": pre-install
-    "helm.sh/hook-weight": "-25"
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -14,8 +14,8 @@ metadata:
   name: airflow-rolebinding
   namespace: {{ .Values.namespace }}
   annotations:
-    "helm.sh/hook": pre-install
-    "helm.sh/hook-weight": "-25"
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
 subjects:
 - kind: ServiceAccount
   name: {{ .Values.airflowCfg.kubernetes.workerServiceAccountName }}

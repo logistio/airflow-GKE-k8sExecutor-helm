@@ -4,16 +4,18 @@
 # BUILD: docker build --rm -t puckel/docker-airflow .
 # SOURCE: https://github.com/puckel/docker-airflow
 
-FROM python:3.6-slim
+FROM python:3.7-slim
 LABEL maintainer="Puckel_"
 
 # Never prompts the user for choices on installation/configuration of packages
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM linux
 
-# Airflow
-ARG AIRFLOW_VERSION=2.0.0dev
+ARG AIRFLOW_VERSION=1.10.2
 ARG AIRFLOW_HOME=/usr/local/airflow
+ARG AIRFLOW_DEPS=""
+ARG PYTHON_DEPS=""
+ENV AIRFLOW_GPL_UNIDECODE yes
 
 # Define en_US.
 ENV LANGUAGE en_US.UTF-8
@@ -51,6 +53,7 @@ RUN set -ex \
         rsync \
         netcat \
         locales \
+        wget \
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
@@ -65,7 +68,7 @@ RUN set -ex \
     && pip install cryptography \
     && pip install psycopg2 \
     && pip install mysqlclient \
-    && pip install git+https://github.com/apache/incubator-airflow#egg=apache-airflow \
+    && pip install git+git://github.com/apache/airflow.git@effa9e8b9ca50bbab1687d11fd4ccc7c32c49c1a#egg=apache-airflow \
     && apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
     && apt-get clean \
@@ -78,27 +81,25 @@ RUN set -ex \
         /usr/share/doc-base
 
 # Install google dependencies for oauth login
-RUN pip install google-api-python-client && \
-    pip install oauth2client && \
-    pip install datalab && \
-    pip install flask-oauthlib 
+# RUN pip install google-api-python-client && \
+#     pip install oauth2client && \
+#     pip install datalab && \
+#     pip install flask-oauthlib
+
+## Dumb-init https://github.com/Yelp/dumb-init/blob/master/README.md
+RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64
+RUN chmod +x /usr/local/bin/dumb-init
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-
-# This is to connect via SSL on Azure Postgres
-# https://docs.microsoft.com/en-us/azure/postgresql/concepts-ssl-connection-security
-# https://www.postgresql.org/docs/9.6/static/libpq-ssl.html
-RUN mkdir ${AIRFLOW_HOME}/.postgresql
-RUN chown -R airflow: ${AIRFLOW_HOME}/.postgresql
-COPY azure/root.crt ${AIRFLOW_HOME}/.postgresql/root.crt
-RUN chown -R airflow: ${AIRFLOW_HOME}/.postgresql/root.crt
 
 RUN chown -R airflow: ${AIRFLOW_HOME}
 
 EXPOSE 8080
 
+ENV AIRFLOW_HOME=${AIRFLOW_HOME}
+
 USER airflow
 WORKDIR ${AIRFLOW_HOME}
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/dumb-init", "--", "/entrypoint.sh"]
 CMD ["webserver"] # set default arg for entrypoint

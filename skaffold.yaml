@@ -1,0 +1,15 @@
+apiVersion: skaffold/v1beta6
+kind: Config
+build:
+  artifacts:
+  - image: gcr.io/icabbi-202810/airflow
+    context: docker/
+    docker: 
+      dockerfile: Dockerfile
+      cacheFrom: 
+        - gcr.io/icabbi-202810/airflow
+  googleCloudBuild:
+    timeout: 10000s
+    dockerImage: gcr.io/cloud-builders/docker
+deploy:
+  kubectl: {}

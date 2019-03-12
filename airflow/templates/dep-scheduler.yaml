@@ -32,18 +32,9 @@ spec:
           image: {{ .Values.webScheduler.image }}:{{ .Values.webScheduler.tag }}
           imagePullPolicy: {{ .Values.webScheduler.imagePullPolicy }}
           volumeMounts:
-          - name: {{ .Values.webScheduler.dagsVolumeClaim }} 
-            mountPath: {{ .Values.webScheduler.dagsMountPath }}
-            subPath: {{ .Values.dagVolume.dagSubPath }}
-            readOnly: {{ .Values.webScheduler.scheduler.dagVolumeReadOnly }}
-          - name: {{ .Values.webScheduler.logsVolumeClaim }}
-            mountPath: {{ .Values.webScheduler.logsMountPath }}
-            subPath: {{ .Values.logVolume.logSubPath }}
           - name: {{ .Values.webScheduler.airflowCfgConfigMap }}
             mountPath: {{ .Values.webScheduler.airflowCfgPath }}
             subPath: airflow.cfg
-          # - name: {{ .Values.secrets.key.kubeconfig }}
-          #   mountPath: {{ .Values.webScheduler.scheduler.kubeconfigMountPath }}
           env:
            - name: SQL_ALCHEMY_CONN
              valueFrom:
@@ -55,13 +46,10 @@ spec:
                secretKeyRef:
                   name: {{ .Values.secrets.name }}
                   key: {{ .Values.secrets.key.fernetKey }}
-# {{- if .Values.airflowCfg.core.remoteLogging }}
-#            - name: AIRFLOW__CORE__REMOTE_BASE_LOG_FOLDER
-#              valueFrom:
-#                secretKeyRef:
-#                  name: {{ .Values.secrets.name }}
-#                  key: "{{ .Values.secrets.key.gcsLogFolder }}"
-# {{ end }}    
+{{- if .Values.airflowCfg.core.remoteLogging }}
+           - name: AIRFLOW__CORE__REMOTE_BASE_LOG_FOLDER
+             value: {{ .Values.googleLogBucket }}
+{{ end }}
           args: ["scheduler"]
           resources:
 {{ toYaml .Values.webScheduler.scheduler.resources | indent 12 }}
@@ -72,18 +60,5 @@ spec:
       volumes:
         - name: {{ .Values.webScheduler.airflowCfgConfigMap }}
           configMap:
-            name: "{{ .Values.webScheduler.airflowCfgConfigMap }}-{{ .Release.Time.Seconds }}"
-        - name: {{ .Values.webScheduler.dagsVolumeClaim}} 
-          persistentVolumeClaim:
-            claimName: {{ .Values.webScheduler.dagsVolumeClaim }} 
-            readOnly: {{ .Values.webScheduler.scheduler.dagVolumeReadOnly }}
-        - name: {{ .Values.webScheduler.logsVolumeClaim }}  
-          persistentVolumeClaim:
-            claimName: {{ .Values.webScheduler.logsVolumeClaim }} 
-        # - name: {{ .Values.secrets.key.kubeconfig }}
-        #   secret:
-        #     secretName: {{ .Values.secrets.name }}
-        #     items:
-        #     - key: {{ .Values.secrets.key.kubeconfig }}
-        #       path: {{ .Values.secrets.key.kubeconfig }}
+            name: "{{ .Values.webScheduler.airflowCfgConfigMap }}"
 {{- end -}}
