@@ -81,7 +81,7 @@ RUN set -ex \
         /usr/share/doc-base
 
 # Install google dependencies for oauth login
-# RUN pip install google-api-python-client && \
+RUN pip install google-api-python-client
 #     pip install oauth2client && \
 #     pip install datalab && \
 #     pip install flask-oauthlib

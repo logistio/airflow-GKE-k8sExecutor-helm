@@ -14,7 +14,7 @@ google:
   databaseName: airflow
 
 createWorkerRBAC: true
-googleLogBucket: gs://icabbi-airflow-log-bucket
+googleLogBucket: "gs://uk-icabbi-airflow-logs"
 
 #### If not using the install script, create the secret below using the following form:
 # kubectl create secret generic airflow \
@@ -45,13 +45,13 @@ airflowCfg:
     serviceAccountName: airflow-rbac
   kubernetes:
     workerServiceAccountName: airflow-rbac
-    deleteWorkerPods: True
+    deleteWorkerPods: False
     # This should be the same as the webScheduler.airflowCfgConfigMap unless 
     # you are creating a second configmap. 
     # There is currently only one templated (airflow-cfg-configmap.yaml). 
     # This is named {{ .Values.webScheduler.airflowCfgConfigMap }}
     airflowConfigmap: airflow-configmap
-    workerContainerRepository: gcr.io/icabbi-202810
+    workerContainerRepository: gcr.io/icabbi-202810/airflow
     workerContainerTag: "latest"
     namespace: airflow
     # Add a list of secrets in the form of ENV_VARIABLE=KUBERNETES_SECRET_NAME=KUBERNETES_SECRET_KEY
@@ -138,8 +138,8 @@ ingress:
     nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
   path: ""
   hosts: 
-    - airflow.mysite.io
+    - airflow-test.logistio.ie
   tls:
   - hosts:
-    - airflow.mysite.io
-    secretName: airflow.mysite.io
+    - airflow-test.logistio.ie
+    secretName: airflow-test.logistio.ie
