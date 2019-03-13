@@ -1,8 +1,0 @@
-{
-  "helm":{
-    "repo": "https://opensource-helm.squareroute.io",
-    "repoName": "airflow-k8s",
-    "helmFolder": "airflow"
-  },
-  "buildBranch": "master | nfs"
-}
